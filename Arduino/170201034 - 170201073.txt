@@ -1,0 +1,119 @@
+#include <LiquidCrystal.h>
+#include <Keypad.h>
+
+//Duman
+int pina0 = A0;
+int pin7 = 7;
+//Hareket
+int pina8 = A8;
+int pin14 = 14;
+//Ekran
+int pina3 = A3;
+LiquidCrystal lcd(13, 12, 11, 10, 9, 8);
+//Şifre
+String pass = "2645";
+int pos = 0;
+int inc = 0;
+
+int ledGrn = 4;
+int ledRed = 5;
+
+char keys[4][3] = 
+{
+  {'1','2','3'},
+  {'4','5','6'},
+  {'7','8','9'},
+  {'*','0','#'}
+};
+
+byte keypadyan[4] = {18, 19, 20, 21};
+byte keypadust[3] = {17, 16, 15};
+
+Keypad keypad = Keypad(makeKeymap(keys), keypadyan, keypadust, 4, 3);
+
+void setup() {
+  pinMode(pina0, INPUT);
+  pinMode(pin7, OUTPUT);
+  pinMode(pina8, INPUT);
+  pinMode(pin14, OUTPUT);
+  pinMode(ledGrn, OUTPUT);
+  pinMode(ledRed, OUTPUT);
+  analogReference(INTERNAL1V1);
+  lcd.begin(16,2);
+  lcd.setCursor(0,0);
+}
+
+void loop() {
+  //A
+  int listen1 = digitalRead(pina0);
+  if(listen1 == 1){
+    digitalWrite(pin7, HIGH);
+  }
+  else{
+    digitalWrite(pin7, LOW);
+  }
+
+  int listen2 = digitalRead(pina8);
+  if(listen2 == 1){
+    digitalWrite(pin14, HIGH);
+  }
+  else{
+    digitalWrite(pin14, LOW);
+  }
+
+  float temperature = analogRead(pina3);
+  temperature = temperature*1100/(1024*10);
+
+  if(temperature > 30){
+    lcd.print("SICAKLIK YUKSEK ");
+    lcd.setCursor(0,1);
+    lcd.print(temperature);
+    lcd.setCursor(0,0);
+  }
+  else if(temperature < 20){
+    lcd.print("SICAKLIK DUSTU  ");
+    lcd.setCursor(0,1);
+    lcd.print(temperature);
+    lcd.setCursor(0,0);
+  }
+  else{
+    lcd.print("SICAKLIK:       ");
+    lcd.setCursor(0,1);
+    lcd.print(temperature);
+    lcd.setCursor(0,0);
+  }
+
+  char pressed = keypad.getKey();
+  if(pressed){
+    if(pressed == '*' || pressed == '#'){
+      pos = 0;
+      digitalWrite(ledRed, HIGH);
+      digitalWrite(ledGrn, HIGH);
+      delay(50);
+      digitalWrite(ledRed, LOW);
+      digitalWrite(ledGrn, LOW);
+    }
+    else if(pressed == pass[pos]){
+      pos++;
+    }
+    else if (pressed != pass[pos]){
+      inc++;
+      pos++;
+    }
+
+    if(pos == 4){
+      if(inc > 0){
+        inc = 0;
+        pos = 0;
+        digitalWrite(ledRed, HIGH);
+        digitalWrite(ledGrn, LOW);
+      }
+      else if(pos == 4 && inc == 0){
+        pos = 0;
+        inc = 0;
+        digitalWrite(ledRed, LOW);
+        digitalWrite(ledGrn, HIGH);
+      }
+    }
+  }
+}
